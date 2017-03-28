@@ -41,10 +41,13 @@ def parse_args():
 def load_csv(filename):
     """CSV 파일을 읽어 dict를 생성한다."""
     try:
-        with open(filename, newline='') as file:
+        with open(filename, 'r', encoding='utf-8-sig', newline='') as file:
             rows = list(csv.DictReader(file))
     except FileNotFoundError:
         print('CSV 파일을 찾을 수 없습니다: ' + filename)
+        return None
+    except UnicodeDecodeError:
+        print('CSV 파일의 인코딩을 UTF-8로 바꾸어 주세요: ' + filename)
         return None
     return rows
 
@@ -53,8 +56,15 @@ def load_text(filenames):
     """텍스트 파일들을 읽어 하나로 모은다."""
     text = ''
     for filename in filenames:
-        with open(filename, newline='') as file:
-            text += file.read()
+        try:
+            with open(filename, 'r', encoding='utf-8-sig', newline='') as file:
+                text += file.read()
+        except FileNotFoundError:
+            print('원본 파일을 찾을 수 없습니다: ' + filename)
+            return None
+        except UnicodeDecodeError:
+            print('원본 파일의 인코딩을 UTF-8로 바꾸어 주세요: ' + filename)
+            return None
     return text
 
 
@@ -71,7 +81,7 @@ def map_text(dic, text):
 
 def write_text(outfile, text):
     """text를 파일로 저장한다."""
-    with open(outfile, 'w') as file:
+    with open(outfile, 'w', encoding='utf-8') as file:
         file.write(text)
 
 
@@ -88,6 +98,8 @@ def main():
 
     # 원본 텍스트 파일 로드
     text = load_text(args.filenames)
+    if text is None:
+        exit(1)
 
     # 치환
     replaced_text = map_text(dic, text)
